@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Resim Dönüştür</title>
+	<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+	<link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+	<style type="text/css">
+		.grid-back{
+			background-color: #eee;
+			background-size: 60px 60px;
+			background-position: 0 0, 30px 30px;
+			background-image: -webkit-linear-gradient(45deg, #CCC 25%, transparent 25%, transparent 75%, #CCC 75%, #CCC),
+			                  -webkit-linear-gradient(45deg, #CCC 25%, transparent 25%, transparent 75%, #CCC 75%, #CCC);
+			background-image: -moz-linear-gradient(45deg, #CCC 25%, transparent 25%, transparent 75%, #CCC 75%, #CCC),
+			                  -moz-linear-gradient(45deg, #CCC 25%, transparent 25%, transparent 75%, #CCC 75%, #CCC);
+			background-image: linear-gradient(45deg, #CCC 25%, transparent 25%, transparent 75%, #CCC 75%, #CCC),
+			                  linear-gradient(45deg, #CCC 25%, transparent 25%, transparent 75%, #CCC 75%, #CCC);
+		}
+
+		#input-parent{
+			position: relative;
+		}
+
+		.point{
+			width: 20px;
+			height: 20px;
+			position: absolute;
+			z-index: 2;
+			background: #FFF8;
+			border: 2px solid #0008;
+			transform: translate(-50%,-50%);
+			border-radius: 8px;
+		}
+
+		#input-img{
+			width: 100%
+		}
+
+		#preview{
+			left: 50%;
+			top: 50%;
+			position: relative;
+			transform: translate(-50%  , -50%);
+			max-height: 90%;
+			max-width: 90%
+		}
+	</style>
+
+</head>
+<body ondragstart="return false;" ondrop="return false;" style="user-select: none;">
+	<h3 style="padding: 20px;background: #EEE;">
+		Resim Dönüştürme Programı
+		<input type="file" name="" id='input-file' style="display: none">
+
+		<button class="btn btn-success" style="float: right;" id='select-image'>
+			<i class="fa fa-upload"></i>
+			Resim Seç
+		</button>
+
+		<a class="btn btn-info" style="float: right;margin-right: 10px" id='download-image' download="download">
+			<i class="fa fa-download"></i>
+			İndir
+		</a>
+
+
+
+	</h3>
+
+	<div class="row" style="margin: 10px">
+		<div class="col-md-4">
+			<h5 class="text-muted text-center">
+				<i class="fa fa-image"></i>
+				Giriş Resmi
+			</h5>
+			<div class='grid-back'>
+				<div id='input-parent'> 
+					<div class='point' style="left:0%;top:50%;cursor: ew-resize;" id="left-point"  type="x"></div>
+					<div class='point' style="left:100%;top:50%;cursor: ew-resize;" id="right-point" type="x"></div>
+					<div class='point' style="left:50%;top:0%;cursor: ns-resize;" id="top-point" type="y"></div>
+					<div class='point' style="left:50%;top:100%;cursor: ns-resize;" id="bottom-point" type="y"></div>
+					<img src="test.png" id='input-img'>
+				</div>
+				
+			</div>
+
+		</div>
+		<div class="col-md-4">
+			<h5 class="text-muted text-center">
+				<i class="fa fa-gears"></i>
+				Ayarlar
+			</h5>
+			<label>Genişlik</label>
+			<input type="number" name="" value="120" class="form-control" id="output-width">
+			<label>Yükseklik</label>
+			<input type="number" name="" value="120" class="form-control" id="output-height">
+			<label>Format</label>
+			<select class='form-control' id='format'>
+				<option value="image/jpeg" selected="selected"> .jpg </option>
+				<option value="image/png"> .png </option>
+			</select>
+
+			<label>Kalite</label>
+			<input type="range" class="custom-range" id="quality">
+			<hr>
+			<button class="btn btn-info" id='convert'>
+				<i class='fa fa-refresh'></i>
+				Dönüştür
+			</button>
+		</div>
+		<div class="col-md-4">
+
+			<h5 class="text-muted text-center">
+				<i class="fa fa-eye"></i>
+				Çıktı
+			</h5>
+			<div class="grid-back" style="height: 400px;">
+				<img src="test.png" id='preview'>
+			</div>
+		</div>		
+	</div>
+
+</body>
+
+<script type="text/javascript">
+
+	$(document).on("mouseup",function (e) {
+		lastPoint= null
+	})	
+	var lastPoint = null;
+	$(".point").on("mousedown",function (e) {
+		lastPoint = this;
+	})
+	$(document).on("mousemove",function (e) {
+		if(e.which==1){
+			var bound = $("#input-parent").get(0).getBoundingClientRect();
+			if($(lastPoint).attr("type")=="x"){
+				var percent = ((e.pageX - bound.left) / bound.width ) * 100;
+				if(percent<0) percent=0;
+				if(percent>100) percent=100;
+				 lastPoint.style.left = percent + "%";
+			}
+			if($(lastPoint).attr("type")=="y"){
+				var percent = ((e.pageY - bound.top) / bound.height ) * 100;
+				if(percent<0) percent=0;
+				if(percent>100) percent=100;
+				 lastPoint.style.top = percent + "%";
+			}
+
+			var l = $("#left-point").get(0).style.left
+			var r = $("#right-point").get(0).style.left
+			var t = $("#top-point").get(0).style.top
+			var b = $("#bottom-point").get(0).style.top
+
+
+
+			$("#left-point").get(0).style.top = (parseFloat(t)+parseFloat(b))/2 + "%"
+			$("#right-point").get(0).style.top = (parseFloat(t)+parseFloat(b))/2 + "%"
+			$("#top-point").get(0).style.left =(parseFloat(l)+parseFloat(r))/2 + "%"
+			$("#bottom-point").get(0).style.left = (parseFloat(l)+parseFloat(r))/2 + "%"
+
+			
+
+			$("#input-img").css("clip-path",
+				"polygon(" +
+				l + " " + t  + "," +
+				r + " " + t  + "," +
+				r + " " + b  + "," +
+				l + " " + b  + ")"
+				);
+		}
+	})
+
+
+	$("#select-image").click(function (argument) {
+		$("#input-file").click();
+	})
+	$("#input-file").on("change",function () {
+		var input = this;
+	    var reader = new FileReader();
+	    reader.onload = function(e) {
+	      $('#input-img').attr('src', e.target.result);
+	    }
+	    reader.readAsDataURL(input.files[0]);
+	})
+
+
+
+
+$("#convert").on("click",function () {
+
+	var canvas = document.createElement("canvas");
+
+	var w = parseInt($("#output-width").val());
+	var h = parseInt($("#output-height").val())
+	canvas.width = w;
+	canvas.height = h;
+
+	canvas.style.border="2px solid red"
+
+	var context = canvas.getContext("2d");
+
+	//document.body.append(canvas)
+
+	var l = parseFloat($("#left-point").get(0).style.left)/100
+	var r = parseFloat($("#right-point").get(0).style.left)/100
+	var t = parseFloat($("#top-point").get(0).style.top)/100
+	var b = parseFloat($("#bottom-point").get(0).style.top)/100
+
+	var sw = Math.abs( l-r )
+	var sh = Math.abs( t-b )
+
+	console.log(l,r,t,b,w,h,sw,sh)
+
+	var quality = parseFloat($("#quality").val())/100
+	var format = $("#format").val()
+
+	base_image = new Image();
+	base_image.src = $("#input-img").get(0).src;
+	base_image.onload = function(){
+	    context.drawImage(base_image,
+	    					 -l*(1/sw)*w,
+	    					 -t*(1/sh)*h,
+	    					 w*(1/sw),
+	    					 h*(1/sh));
+
+	    $("#preview").get(0).src = canvas.toDataURL(format , quality)
+	    $("#download-image").get(0).href = $("#preview").get(0).src
+	}
+
+
+	
+})
+
+
+
+</script>
+</html>
